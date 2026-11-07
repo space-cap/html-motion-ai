@@ -34,9 +34,10 @@ export default function App() {
     )
   }, [selectedPresetId])
 
-  // 사용자가 실시간 편집 가능한 HTML/CSS 상태
+  // 사용자가 실시간 편집 가능한 HTML/CSS/JS 상태
   const [editableHtml, setEditableHtml] = useState(currentPreset.html)
   const [editableCss, setEditableCss] = useState(currentPreset.css)
+  const [editableJs, setEditableJs] = useState(currentPreset.js || '')
 
   // 프리셋 변경 시 에디터 내용 동기화
   const handleSelectPreset = (id: string) => {
@@ -45,6 +46,7 @@ export default function App() {
     if (preset) {
       setEditableHtml(preset.html)
       setEditableCss(preset.css)
+      setEditableJs(preset.js || '')
     }
   }
 
@@ -52,11 +54,13 @@ export default function App() {
   const handleResetCode = () => {
     setEditableHtml(currentPreset.html)
     setEditableCss(currentPreset.css)
+    setEditableJs(currentPreset.js || '')
   }
 
   // 코드 복사
   const handleCopyCode = () => {
-    const fullCode = `<!-- ${currentPreset.title} -->\n${editableHtml}\n\n<style>\n${editableCss}\n</style>`
+    const jsBlock = editableJs ? `\n\n<script>\n${editableJs}\n</script>` : ''
+    const fullCode = `<!-- ${currentPreset.title} -->\n${editableHtml}\n\n<style>\n${editableCss}\n</style>${jsBlock}`
     navigator.clipboard.writeText(fullCode)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
@@ -70,6 +74,7 @@ export default function App() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${currentPreset.title}</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -88,6 +93,13 @@ export default function App() {
 </head>
 <body>
   ${editableHtml}
+  <script>
+    try {
+      ${editableJs}
+    } catch(e) {
+      console.error(e);
+    }
+  </script>
 </body>
 </html>`
 
@@ -397,6 +409,7 @@ export default function App() {
                   <SandboxPreview
                     html={editableHtml}
                     css={editableCss}
+                    js={editableJs}
                     bgTheme={bgTheme}
                   />
                 </motion.div>

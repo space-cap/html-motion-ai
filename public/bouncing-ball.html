@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>주황색 공 3단 바운스 모션 (5초)</title>
+  <title>주황색 공 3단 리얼 물리 바운스 (5초)</title>
+  <!-- 세계 최고 애니메이션 엔진 GSAP 3 로드 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -14,23 +16,23 @@
     body {
       width: 100vw;
       height: 100vh;
-      background: radial-gradient(circle at 50% 30%, #1e293b 0%, #0f172a 60%, #020617 100%);
+      background: radial-gradient(circle at 50% 25%, #181c2e 0%, #0d101d 55%, #05070e 100%);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       overflow: hidden;
       color: #f8fafc;
       user-select: none;
     }
 
-    /* 제목 및 정보 헤더 */
+    /* 상단 헤더 */
     .header {
       position: absolute;
-      top: 36px;
+      top: 28px;
       text-align: center;
-      z-index: 10;
+      z-index: 20;
     }
 
     .title {
@@ -40,397 +42,623 @@
       background: linear-gradient(135deg, #fb923c, #f97316, #ea580c);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     .subtitle {
-      font-size: 14px;
+      font-size: 13px;
       color: #94a3b8;
     }
 
-    /* 애니메이션 무대 (Stage) */
+    /* 애니메이션 메인 스테이지 */
     .stage {
       position: relative;
-      width: 480px;
-      height: 420px;
+      width: 500px;
+      height: 480px;
       display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-end;
-      padding-bottom: 70px;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 90px;
     }
 
-    /* 바닥 라인 */
-    .floor {
+    /* 바닥 베이스 그리드 및 반사면 */
+    .floor-plane {
       position: absolute;
-      bottom: 70px;
+      bottom: 90px;
+      width: 440px;
+      height: 120px;
+      background: radial-gradient(ellipse at 50% 0%, rgba(249, 115, 22, 0.12) 0%, rgba(15, 23, 42, 0) 70%);
+      transform-origin: 50% 0%;
+      pointer-events: none;
+    }
+
+    /* 바닥 레이저 라인 */
+    .floor-line {
+      position: absolute;
+      bottom: 90px;
       width: 380px;
       height: 2px;
-      background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.4), rgba(251, 146, 60, 0.8), rgba(249, 115, 22, 0.4), transparent);
-      box-shadow: 0 0 16px rgba(249, 115, 22, 0.5);
+      background: linear-gradient(90deg, transparent, rgba(249, 115, 22, 0.3) 15%, #f97316 50%, rgba(249, 115, 22, 0.3) 85%, transparent);
+      box-shadow: 0 0 20px rgba(249, 115, 22, 0.6);
     }
 
-    /* 그림자 (Shadow) */
+    /* 바닥 충격파 링 (Shockwave) */
+    .shockwave {
+      position: absolute;
+      bottom: 84px;
+      width: 80px;
+      height: 16px;
+      border: 2px solid rgba(251, 146, 60, 0.8);
+      border-radius: 50%;
+      opacity: 0;
+      transform: scale(0.2);
+      pointer-events: none;
+      box-shadow: 0 0 15px rgba(249, 115, 22, 0.7);
+    }
+
+    /* 바닥 섀도우 (Shadow) */
     .ball-shadow {
       position: absolute;
-      bottom: 62px;
+      bottom: 82px;
       width: 90px;
-      height: 16px;
-      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.75) 0%, rgba(249, 115, 22, 0.15) 45%, transparent 75%);
+      height: 18px;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.92) 0%, rgba(234, 88, 12, 0.25) 35%, transparent 70%);
       border-radius: 50%;
       transform-origin: center center;
-      animation: shadowBounce 5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
     }
 
-    /* 주황색 공 (Orange Ball) */
-    .ball-wrapper {
+    /* 주황색 공 컨테이너 (위치 Y 제어) */
+    .ball-container {
       position: absolute;
-      bottom: 70px;
-      transform-origin: center bottom;
-      animation: ballBounce 5s cubic-bezier(0.28, 0.84, 0.42, 1) forwards;
+      bottom: 90px;
+      width: 84px;
+      height: 84px;
+      transform-origin: 50% 100%;
     }
 
+    /* 주황색 공 (스쿼시 & 스트레치 및 3D 렌더링) */
     .ball {
-      width: 80px;
-      height: 80px;
+      width: 100%;
+      height: 100%;
       border-radius: 50%;
-      /* 생생한 3D 입체 구형 오렌지 렌더링 */
-      background: radial-gradient(circle at 30% 25%, #ffedd5 0%, #fed7aa 15%, #fb923c 45%, #ea580c 75%, #9a3412 100%);
+      transform-origin: 50% 100%;
+      /* 초고화질 3D 구체 질감 & 반사광 */
+      background: radial-gradient(circle at 32% 28%, #fff7ed 0%, #ffedd5 12%, #fed7aa 22%, #fb923c 50%, #ea580c 78%, #7c2d12 100%);
       box-shadow: 
-        inset -6px -6px 14px rgba(124, 45, 18, 0.8),
-        inset 4px 4px 10px rgba(255, 255, 255, 0.7),
-        0 8px 24px rgba(234, 88, 12, 0.45);
+        inset -8px -8px 20px rgba(67, 20, 7, 0.85),
+        inset 5px 5px 14px rgba(255, 255, 255, 0.8),
+        0 14px 35px rgba(234, 88, 12, 0.45);
       position: relative;
     }
 
-    /* 공 표면 하이라이트 광택 */
+    /* 공 표면 림라이트 & 하이라이트 글레어 */
     .ball::before {
       content: '';
       position: absolute;
       top: 10px;
       left: 14px;
-      width: 20px;
-      height: 12px;
+      width: 24px;
+      height: 14px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.65);
-      transform: rotate(-35deg);
+      background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 80%);
+      transform: rotate(-32deg);
       filter: blur(1px);
     }
 
-    /* ========================================================
-       5초 동안 세 번 튀어오르는 키프레임 애니메이션
-       - 1회차: 가장 높게 (약 -240px)
-       - 2회차: 중간 높이 (약 -120px)
-       - 3회차: 낮은 높이 (약 -45px)
-       - 4.2초 이후 안정적으로 멈춤 (5.0초 완성)
-       ======================================================== */
-    @keyframes ballBounce {
-      /* [시작] 바닥 준비 및 도약 전 스쿼시 */
-      0% {
-        transform: translateY(0px) scale(1, 1);
-        animation-timing-function: ease-out;
-      }
-      4% {
-        /* 첫 도약 전 탄성 웅크림 */
-        transform: translateY(0px) scale(1.22, 0.78);
-        animation-timing-function: ease-out;
-      }
-      8% {
-        /* 솟구치는 순간 길쭉하게 늘어남 */
-        transform: translateY(-40px) scale(0.88, 1.15);
-        animation-timing-function: ease-out;
-      }
-
-      /* [1회차 바운스] 최고점 약 -240px 도달 (1.0초 부근) */
-      20% {
-        transform: translateY(-240px) scale(1, 1);
-        animation-timing-function: ease-in;
-      }
-      31% {
-        /* 낙하 가속도에 의한 스트레치 */
-        transform: translateY(-40px) scale(0.9, 1.12);
-        animation-timing-function: ease-in;
-      }
-      35% {
-        /* 1회차 바닥 착지 강한 스쿼시 (1.75초) */
-        transform: translateY(0px) scale(1.28, 0.72);
-        animation-timing-function: ease-out;
-      }
-      39% {
-        /* 2회차 도약 */
-        transform: translateY(-25px) scale(0.92, 1.1);
-        animation-timing-function: ease-out;
-      }
-
-      /* [2회차 바운스] 중간 최고점 약 -120px 도달 (2.45초 부근) */
-      49% {
-        transform: translateY(-120px) scale(1, 1);
-        animation-timing-function: ease-in;
-      }
-      58% {
-        transform: translateY(-20px) scale(0.94, 1.06);
-        animation-timing-function: ease-in;
-      }
-      62% {
-        /* 2회차 바닥 착지 스쿼시 (3.1초) */
-        transform: translateY(0px) scale(1.18, 0.84);
-        animation-timing-function: ease-out;
-      }
-      66% {
-        /* 3회차 도약 */
-        transform: translateY(-15px) scale(0.96, 1.04);
-        animation-timing-function: ease-out;
-      }
-
-      /* [3회차 바운스] 마지막 작은 최고점 약 -45px 도달 (3.75초 부근) */
-      75% {
-        transform: translateY(-45px) scale(1, 1);
-        animation-timing-function: ease-in;
-      }
-      82% {
-        /* 3회차 착지 약한 스쿼시 (4.1초) */
-        transform: translateY(0px) scale(1.09, 0.93);
-        animation-timing-function: ease-out;
-      }
-      87% {
-        /* 미세한 잔여 반동 */
-        transform: translateY(-8px) scale(0.99, 1.01);
-        animation-timing-function: ease-in;
-      }
-      92% {
-        transform: translateY(0px) scale(1.03, 0.97);
-      }
-      96%, 100% {
-        /* 5초 시점에 완전히 안정적 정지 */
-        transform: translateY(0px) scale(1, 1);
-      }
+    /* 공 바닥 반사광 (Ambient Rim) */
+    .ball::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      left: 20%;
+      width: 60%;
+      height: 10px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(251, 146, 60, 0.5) 0%, transparent 80%);
+      filter: blur(2px);
     }
 
-    /* 그림자 애니메이션 (공의 높이에 따라 크기와 투명도 연동) */
-    @keyframes shadowBounce {
-      0% {
-        transform: scale(1);
-        opacity: 0.7;
-      }
-      4% {
-        transform: scale(1.25);
-        opacity: 0.9;
-      }
-      20% {
-        /* 1회차 최고점: 가장 작고 흐릿 */
-        transform: scale(0.28);
-        opacity: 0.15;
-      }
-      35% {
-        /* 1회차 착지: 가장 크고 진함 */
-        transform: scale(1.35);
-        opacity: 0.95;
-      }
-      49% {
-        /* 2회차 최고점 */
-        transform: scale(0.48);
-        opacity: 0.28;
-      }
-      62% {
-        /* 2회차 착지 */
-        transform: scale(1.2);
-        opacity: 0.88;
-      }
-      75% {
-        /* 3회차 최고점 */
-        transform: scale(0.75);
-        opacity: 0.45;
-      }
-      82% {
-        /* 3회차 착지 */
-        transform: scale(1.1);
-        opacity: 0.8;
-      }
-      92%, 100% {
-        /* 최종 안정 정지 상태 */
-        transform: scale(1);
-        opacity: 0.75;
-      }
-    }
-
-    /* 하단 타임라인 & 컨트롤 바 */
+    /* 하단 비디오 플레이어 컨트롤 바 */
     .controls-wrapper {
       position: absolute;
       bottom: 30px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 14px;
-      z-index: 10;
+      gap: 12px;
+      z-index: 20;
+      background: rgba(15, 23, 42, 0.7);
+      padding: 14px 24px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
     }
 
-    /* 5초 프로그레스 바 */
-    .progress-container {
-      width: 320px;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 999px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .progress-bar {
-      height: 100%;
-      width: 0%;
-      background: linear-gradient(90deg, #f97316, #fb923c);
-      border-radius: 999px;
-      animation: progressAnim 5s linear forwards;
-    }
-
-    @keyframes progressAnim {
-      0% { width: 0%; }
-      100% { width: 100%; }
-    }
-
-    .time-label {
-      font-size: 13px;
+    .time-info {
+      width: 340px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
       color: #94a3b8;
       font-variant-numeric: tabular-nums;
+      font-weight: 500;
+    }
+
+    /* 프로그레스 바 (클릭하여 시크 가능) */
+    .progress-track {
+      width: 340px;
+      height: 7px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 999px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ea580c, #f97316, #fb923c);
+      border-radius: 999px;
+      box-shadow: 0 0 10px rgba(249, 115, 22, 0.6);
+      pointer-events: none;
     }
 
     /* 버튼 그룹 */
-    .button-group {
+    .btn-group {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
+      margin-top: 2px;
     }
 
     .btn {
-      background: #1e293b;
+      background: rgba(30, 41, 59, 0.8);
       color: #f1f5f9;
-      border: 1px solid #334155;
-      padding: 9px 18px;
-      border-radius: 12px;
-      font-size: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 7px 16px;
+      border-radius: 10px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       transition: all 0.2s ease;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
     }
 
     .btn:hover {
       background: #334155;
       border-color: #f97316;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(249, 115, 22, 0.25);
+      transform: translateY(-1px);
     }
 
-    .btn-replay {
+    .btn-primary {
       background: linear-gradient(135deg, #ea580c, #f97316);
       border: none;
       color: #fff;
+      box-shadow: 0 4px 15px rgba(234, 88, 12, 0.35);
     }
 
-    .btn-replay:hover {
+    .btn-primary:hover {
       background: linear-gradient(135deg, #c2410c, #ea580c);
+      box-shadow: 0 6px 20px rgba(234, 88, 12, 0.5);
+    }
+
+    .speed-select {
+      background: #1e293b;
+      color: #cbd5e1;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
     }
   </style>
 </head>
 <body>
 
-  <!-- 상단 제목 -->
+  <!-- 헤더 -->
   <div class="header">
-    <h1 class="title">🟠 주황색 공 3단 바운스 모션</h1>
-    <p class="subtitle">물리 기반 탄성(Squash & Stretch) 적용 • 정확히 5초 재생</p>
+    <h1 class="title">🟠 주황색 공 3단 리얼 물리 바운스</h1>
+    <p class="subtitle">GSAP 물리 가속도 + 부피 보존 스쿼시 & 스트레치 (정확히 5초)</p>
   </div>
 
-  <!-- 중앙 무대 -->
-  <div class="stage" id="stage">
-    <div class="floor"></div>
+  <!-- 메인 애니메이션 무대 -->
+  <div class="stage">
+    <div class="floor-plane"></div>
+    <div class="floor-line"></div>
+    <div class="shockwave" id="shockwave"></div>
     <div class="ball-shadow" id="shadow"></div>
-    <div class="ball-wrapper" id="ballWrapper">
-      <div class="ball"></div>
+    <div class="ball-container" id="ballContainer">
+      <div class="ball" id="ball"></div>
     </div>
   </div>
 
-  <!-- 하단 컨트롤 & 5초 프로그레스 -->
+  <!-- 하단 비디오 플레이어 컨트롤 -->
   <div class="controls-wrapper">
-    <div class="time-label" id="timerText">0.0초 / 5.0초</div>
-    <div class="progress-container">
-      <div class="progress-bar" id="progressBar"></div>
+    <div class="time-info">
+      <span id="currentTime">0.00초</span>
+      <span id="bouncePhase">1차 최고점 바운스</span>
+      <span>5.00초</span>
     </div>
-    
-    <div class="button-group">
-      <button class="btn btn-replay" onclick="replayAnimation()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-          <path d="M3 3v5h5"/>
-        </svg>
-        다시 재생
+
+    <div class="progress-track" id="progressTrack">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn btn-primary" id="playBtn" onclick="togglePlay()">
+        <span id="playIcon">⏸️</span>
+        <span id="playText">일시정지</span>
+      </button>
+      <button class="btn" onclick="restartAnimation()">
+        🔄 다시 재생
       </button>
       <button class="btn" id="loopBtn" onclick="toggleLoop()">
-        <span id="loopIcon">🔁</span>
-        <span id="loopText">반복 꺼짐</span>
+        🔁 반복: 켜짐
       </button>
+      <select class="speed-select" onchange="changeSpeed(this.value)">
+        <option value="0.5">0.5배속 (슬로모션)</option>
+        <option value="1" selected>1.0배속 (표준)</option>
+        <option value="1.5">1.5배속 (빠름)</option>
+      </select>
     </div>
   </div>
 
   <script>
-    let isLooping = false;
-    let timerInterval = null;
-    let startTime = Date.now();
+    const ballContainer = document.getElementById('ballContainer');
+    const ball = document.getElementById('ball');
+    const shadow = document.getElementById('shadow');
+    const shockwave = document.getElementById('shockwave');
+    const progressFill = document.getElementById('progressFill');
+    const currentTimeText = document.getElementById('currentTime');
+    const bouncePhaseText = document.getElementById('bouncePhase');
+    const playIcon = document.getElementById('playIcon');
+    const playText = document.getElementById('playText');
+    const loopBtn = document.getElementById('loopBtn');
 
-    function startTimer() {
-      clearInterval(timerInterval);
-      startTime = Date.now();
-      timerInterval = setInterval(() => {
-        const elapsed = (Date.now() - startTime) / 1000;
-        const current = Math.min(elapsed, 5.0).toFixed(1);
-        document.getElementById('timerText').textContent = `${current}초 / 5.0초`;
-        if (elapsed >= 5.0) {
-          clearInterval(timerInterval);
+    let isLooping = true;
+    let masterTimeline;
+
+    // 바닥 충격파 링 트리거 함수
+    function triggerShockwave(intensity = 1) {
+      gsap.fromTo(shockwave, 
+        { scale: 0.2, opacity: 0.9 * intensity },
+        { 
+          scale: 1.6 * intensity, 
+          opacity: 0, 
+          duration: 0.35, 
+          ease: "power2.out" 
+        }
+      );
+    }
+
+    // =========================================================================
+    // 디즈니 & 물리학 12원칙 기반 5초 타임라인 설계
+    // - 중력 가속도 법칙: 하강 시 power2.in, 상승 시 power2.out
+    // - 부피 보존 법칙: scaleX * scaleY = 1.0 (찌그러진 만큼 옆으로 넓어짐)
+    // - 그림자 연동: 공의 높이에 완벽 비례
+    // =========================================================================
+    function buildTimeline() {
+      if (masterTimeline) masterTimeline.kill();
+
+      masterTimeline = gsap.timeline({
+        paused: false,
+        onUpdate: updateUI,
+        onComplete: () => {
           if (isLooping) {
-            replayAnimation();
+            masterTimeline.restart();
+          } else {
+            playIcon.textContent = '▶️';
+            playText.textContent = '재생';
           }
         }
-      }, 50);
+      });
+
+      // 공 초기 위치: 바닥 (Y: 0)
+      gsap.set(ballContainer, { y: 0 });
+      gsap.set(ball, { scaleX: 1, scaleY: 1 });
+      gsap.set(shadow, { scale: 1, opacity: 0.9 });
+
+      // -----------------------------------------------------------
+      // [준비 & 도약 1단계] 0.0s ~ 0.22s: 도약 전 응축 (Anticipation Squash)
+      // -----------------------------------------------------------
+      masterTimeline
+        .to(ball, { 
+          scaleX: 1.30, 
+          scaleY: 0.70, 
+          duration: 0.22, 
+          ease: "power1.in" 
+        }, 0)
+        .to(shadow, { 
+          scale: 1.25, 
+          opacity: 0.95, 
+          duration: 0.22 
+        }, 0);
+
+      // -----------------------------------------------------------
+      // [1회차 도약] 0.22s ~ 1.10s: 최고 높이 280px로 힘차게 솟구침
+      // -----------------------------------------------------------
+      // 솟구치는 순간 강한 스트레치
+      masterTimeline
+        .to(ball, { 
+          scaleX: 0.80, 
+          scaleY: 1.25, 
+          duration: 0.18, 
+          ease: "power2.out" 
+        }, 0.22)
+        // 최고점으로 갈수록 원래 구형 복원
+        .to(ball, { 
+          scaleX: 1.0, 
+          scaleY: 1.0, 
+          duration: 0.70, 
+          ease: "sine.out" 
+        }, 0.40)
+        // Y축 솟구침 (감속 상승)
+        .to(ballContainer, { 
+          y: -280, 
+          duration: 0.88, 
+          ease: "power2.out" 
+        }, 0.22)
+        // 그림자 축소 & 흐려짐
+        .to(shadow, { 
+          scale: 0.22, 
+          opacity: 0.15, 
+          duration: 0.88, 
+          ease: "power2.out" 
+        }, 0.22);
+
+      // -----------------------------------------------------------
+      // [1회차 낙하 & 바닥 착지] 1.10s ~ 1.95s: 가속 낙하 및 강한 스쿼시
+      // -----------------------------------------------------------
+      // 낙하 가속도에 의한 스트레치
+      masterTimeline
+        .to(ball, { 
+          scaleX: 0.85, 
+          scaleY: 1.18, 
+          duration: 0.45, 
+          ease: "power2.in" 
+        }, 1.30)
+        // Y축 가속 낙하
+        .to(ballContainer, { 
+          y: 0, 
+          duration: 0.78, 
+          ease: "power2.in" 
+        }, 1.10)
+        .to(shadow, { 
+          scale: 1.0, 
+          opacity: 0.9, 
+          duration: 0.78, 
+          ease: "power2.in" 
+        }, 1.10)
+        // 바닥 닿는 순간 충격파 발생
+        .add(() => triggerShockwave(1.0), 1.88)
+        // 1회차 착지 스쿼시 (강한 찌그러짐)
+        .to(ball, { 
+          scaleX: 1.45, 
+          scaleY: 0.65, 
+          duration: 0.09, 
+          ease: "power2.out" 
+        }, 1.88)
+        .to(shadow, { 
+          scale: 1.4, 
+          opacity: 0.98, 
+          duration: 0.09 
+        }, 1.88);
+
+      // -----------------------------------------------------------
+      // [2회차 도약] 1.97s ~ 2.65s: 중간 높이 140px로 솟구침
+      // -----------------------------------------------------------
+      masterTimeline
+        // 반동 스트레치
+        .to(ball, { 
+          scaleX: 0.86, 
+          scaleY: 1.16, 
+          duration: 0.15, 
+          ease: "power2.out" 
+        }, 1.97)
+        .to(ball, { 
+          scaleX: 1.0, 
+          scaleY: 1.0, 
+          duration: 0.53, 
+          ease: "sine.out" 
+        }, 2.12)
+        // 2차 도약 Y축
+        .to(ballContainer, { 
+          y: -140, 
+          duration: 0.68, 
+          ease: "power2.out" 
+        }, 1.97)
+        .to(shadow, { 
+          scale: 0.45, 
+          opacity: 0.32, 
+          duration: 0.68, 
+          ease: "power2.out" 
+        }, 1.97);
+
+      // -----------------------------------------------------------
+      // [2회차 낙하 & 바닥 착지] 2.65s ~ 3.32s: 가속 낙하 및 중간 스쿼시
+      // -----------------------------------------------------------
+      masterTimeline
+        .to(ball, { 
+          scaleX: 0.90, 
+          scaleY: 1.12, 
+          duration: 0.35, 
+          ease: "power2.in" 
+        }, 2.85)
+        .to(ballContainer, { 
+          y: 0, 
+          duration: 0.62, 
+          ease: "power2.in" 
+        }, 2.65)
+        .to(shadow, { 
+          scale: 1.0, 
+          opacity: 0.88, 
+          duration: 0.62, 
+          ease: "power2.in" 
+        }, 2.65)
+        // 충격파
+        .add(() => triggerShockwave(0.65), 3.27)
+        // 2회차 착지 스쿼시
+        .to(ball, { 
+          scaleX: 1.28, 
+          scaleY: 0.78, 
+          duration: 0.08, 
+          ease: "power2.out" 
+        }, 3.27)
+        .to(shadow, { 
+          scale: 1.25, 
+          opacity: 0.95, 
+          duration: 0.08 
+        }, 3.27);
+
+      // -----------------------------------------------------------
+      // [3회차 도약] 3.35s ~ 3.85s: 작은 높이 55px로 솟구침
+      // -----------------------------------------------------------
+      masterTimeline
+        .to(ball, { 
+          scaleX: 0.92, 
+          scaleY: 1.09, 
+          duration: 0.12, 
+          ease: "power2.out" 
+        }, 3.35)
+        .to(ball, { 
+          scaleX: 1.0, 
+          scaleY: 1.0, 
+          duration: 0.38, 
+          ease: "sine.out" 
+        }, 3.47)
+        .to(ballContainer, { 
+          y: -55, 
+          duration: 0.50, 
+          ease: "power2.out" 
+        }, 3.35)
+        .to(shadow, { 
+          scale: 0.72, 
+          opacity: 0.55, 
+          duration: 0.50, 
+          ease: "power2.out" 
+        }, 3.35);
+
+      // -----------------------------------------------------------
+      // [3회차 낙하 & 바닥 착지] 3.85s ~ 4.30s: 바닥 착지 및 약한 스쿼시
+      // -----------------------------------------------------------
+      masterTimeline
+        .to(ballContainer, { 
+          y: 0, 
+          duration: 0.45, 
+          ease: "power2.in" 
+        }, 3.85)
+        .to(shadow, { 
+          scale: 1.0, 
+          opacity: 0.85, 
+          duration: 0.45, 
+          ease: "power2.in" 
+        }, 3.85)
+        .add(() => triggerShockwave(0.35), 4.28)
+        .to(ball, { 
+          scaleX: 1.14, 
+          scaleY: 0.88, 
+          duration: 0.07, 
+          ease: "power2.out" 
+        }, 4.28);
+
+      // -----------------------------------------------------------
+      // [미세 잔여 반동 & 완전 정착] 4.35s ~ 5.00s (정확히 5.0초 완성)
+      // -----------------------------------------------------------
+      masterTimeline
+        // 미세 바운스 (12px)
+        .to(ballContainer, { 
+          y: -12, 
+          duration: 0.18, 
+          ease: "power1.out" 
+        }, 4.35)
+        .to(ballContainer, { 
+          y: 0, 
+          duration: 0.16, 
+          ease: "power1.in" 
+        }, 4.53)
+        // 잔여 스쿼시 복원
+        .to(ball, { 
+          scaleX: 1.05, 
+          scaleY: 0.95, 
+          duration: 0.08 
+        }, 4.69)
+        .to(ball, { 
+          scaleX: 1.0, 
+          scaleY: 1.0, 
+          duration: 0.23, 
+          ease: "elastic.out(1, 0.5)" 
+        }, 4.77)
+        // 5.0초 종료점 유지
+        .to({}, { duration: 0.0 }, 5.0);
     }
 
-    function replayAnimation() {
-      const ball = document.getElementById('ballWrapper');
-      const shadow = document.getElementById('shadow');
-      const progress = document.getElementById('progressBar');
+    // UI 업데이트 함수 (초, 프로그레스, 단계 표시)
+    function updateUI() {
+      const time = masterTimeline.time();
+      const progress = (time / 5.0) * 100;
+      progressFill.style.width = `${progress}%`;
+      currentTimeText.textContent = `${time.toFixed(2)}초`;
 
-      // CSS 애니메이션 리셋 트릭
-      ball.style.animation = 'none';
-      shadow.style.animation = 'none';
-      progress.style.animation = 'none';
-
-      void ball.offsetWidth; // Reflow 강제 트리거
-
-      ball.style.animation = 'ballBounce 5s cubic-bezier(0.28, 0.84, 0.42, 1) forwards';
-      shadow.style.animation = 'shadowBounce 5s cubic-bezier(0.25, 1, 0.5, 1) forwards';
-      progress.style.animation = 'progressAnim 5s linear forwards';
-
-      startTimer();
-    }
-
-    function toggleLoop() {
-      isLooping = !isLooping;
-      const loopBtn = document.getElementById('loopBtn');
-      const loopText = document.getElementById('loopText');
-
-      if (isLooping) {
-        loopBtn.style.borderColor = '#f97316';
-        loopBtn.style.color = '#fb923c';
-        loopText.textContent = '반복 켜짐';
+      if (time < 1.9) {
+        bouncePhaseText.textContent = '1차 메가 바운스 (-280px)';
+      } else if (time < 3.3) {
+        bouncePhaseText.textContent = '2차 중간 바운스 (-140px)';
+      } else if (time < 4.3) {
+        bouncePhaseText.textContent = '3차 미니 바운스 (-55px)';
       } else {
-        loopBtn.style.borderColor = '#334155';
-        loopBtn.style.color = '#f1f5f9';
-        loopText.textContent = '반복 꺼짐';
+        bouncePhaseText.textContent = '부드러운 바닥 안정 정착';
       }
     }
 
-    // 초기 실행
-    startTimer();
+    // 프로그레스 바 클릭 시 원하는 시간으로 이동 (Scrubbing)
+    const progressTrack = document.getElementById('progressTrack');
+    progressTrack.addEventListener('click', (e) => {
+      const rect = progressTrack.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const ratio = Math.max(0, Math.min(1, clickX / rect.width));
+      masterTimeline.time(ratio * 5.0);
+    });
+
+    // 재생 / 일시정지 토글
+    function togglePlay() {
+      if (masterTimeline.paused()) {
+        masterTimeline.play();
+        playIcon.textContent = '⏸️';
+        playText.textContent = '일시정지';
+      } else {
+        masterTimeline.pause();
+        playIcon.textContent = '▶️';
+        playText.textContent = '재생';
+      }
+    }
+
+    // 다시 재생
+    function restartAnimation() {
+      masterTimeline.restart();
+      playIcon.textContent = '⏸️';
+      playText.textContent = '일시정지';
+    }
+
+    // 반복 토글
+    function toggleLoop() {
+      isLooping = !isLooping;
+      loopBtn.textContent = isLooping ? '🔁 반복: 켜짐' : '🔁 반복: 꺼짐';
+      loopBtn.style.color = isLooping ? '#f97316' : '#f1f5f9';
+      loopBtn.style.borderColor = isLooping ? '#f97316' : 'rgba(255, 255, 255, 0.1)';
+    }
+
+    // 배속 조절
+    function changeSpeed(speed) {
+      masterTimeline.timeScale(parseFloat(speed));
+    }
+
+    // 초기화 및 타임라인 생성
+    buildTimeline();
   </script>
 </body>
 </html>

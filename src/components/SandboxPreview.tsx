@@ -30,6 +30,7 @@ export default function SandboxPreview({
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <style>
     * {
       box-sizing: border-box;

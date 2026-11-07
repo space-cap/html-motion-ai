@@ -3,62 +3,77 @@ import type { MotionItem } from '../types/motion'
 export const MOTION_PRESETS: MotionItem[] = [
   {
     id: 'orange-bounce',
-    title: '🟠 주황색 공 3단 바운스 (5초)',
+    title: '🟠 주황색 공 3단 리얼 물리 바운스 (GSAP)',
     category: 'card',
-    description: '물리 탄성(Squash & Stretch)과 그림자가 연동된 5초 3회 바운스 모션',
-    tags: ['Physics', 'Squash & Stretch', '5s Animation', 'Ball'],
+    description: 'GSAP 물리 가속도 + 부피 보존 스쿼시 & 스트레치 + 바닥 충격파 링 연동',
+    tags: ['GSAP 3', 'Physics', 'Squash & Stretch', '5s Timeline'],
     html: `<div class="stage">
-  <div class="floor"></div>
-  <div class="ball-shadow"></div>
-  <div class="ball-wrapper">
-    <div class="ball"></div>
+  <div class="floor-line"></div>
+  <div class="shockwave" id="shockwave"></div>
+  <div class="ball-shadow" id="shadow"></div>
+  <div class="ball-container" id="ballContainer">
+    <div class="ball" id="ball"></div>
   </div>
 </div>`,
     css: `.stage {
   position: relative;
-  width: 360px;
-  height: 320px;
+  width: 380px;
+  height: 380px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: 50px;
+  padding-bottom: 60px;
 }
 
-.floor {
+.floor-line {
   position: absolute;
-  bottom: 50px;
+  bottom: 60px;
   width: 320px;
   height: 2px;
   background: linear-gradient(90deg, transparent, #f97316, transparent);
   box-shadow: 0 0 16px rgba(249, 115, 22, 0.6);
 }
 
-.ball-shadow {
+.shockwave {
   position: absolute;
-  bottom: 44px;
-  width: 80px;
-  height: 16px;
-  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.85) 0%, rgba(249, 115, 22, 0.2) 50%, transparent 75%);
+  bottom: 54px;
+  width: 70px;
+  height: 15px;
+  border: 2px solid rgba(251, 146, 60, 0.8);
   border-radius: 50%;
-  animation: shadowBounce 5s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+  opacity: 0;
+  transform: scale(0.2);
+  pointer-events: none;
 }
 
-.ball-wrapper {
+.ball-shadow {
   position: absolute;
-  bottom: 50px;
-  animation: ballBounce 5s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
-  transform-origin: center bottom;
+  bottom: 54px;
+  width: 80px;
+  height: 16px;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.9) 0%, rgba(249, 115, 22, 0.25) 35%, transparent 70%);
+  border-radius: 50%;
+  transform-origin: center center;
+}
+
+.ball-container {
+  position: absolute;
+  bottom: 60px;
+  width: 72px;
+  height: 72px;
+  transform-origin: 50% 100%;
 }
 
 .ball {
-  width: 72px;
-  height: 72px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
-  background: radial-gradient(circle at 30% 25%, #ffedd5 0%, #fed7aa 15%, #fb923c 45%, #ea580c 75%, #9a3412 100%);
+  transform-origin: 50% 100%;
+  background: radial-gradient(circle at 32% 28%, #fff7ed 0%, #fed7aa 20%, #fb923c 50%, #ea580c 78%, #7c2d12 100%);
   box-shadow: 
-    inset -6px -6px 14px rgba(124, 45, 18, 0.8),
-    inset 4px 4px 10px rgba(255, 255, 255, 0.7),
-    0 8px 24px rgba(234, 88, 12, 0.45);
+    inset -7px -7px 16px rgba(67, 20, 7, 0.85),
+    inset 4px 4px 12px rgba(255, 255, 255, 0.8),
+    0 12px 30px rgba(234, 88, 12, 0.45);
   position: relative;
 }
 
@@ -67,38 +82,78 @@ export const MOTION_PRESETS: MotionItem[] = [
   position: absolute;
   top: 9px;
   left: 13px;
-  width: 18px;
-  height: 11px;
+  width: 20px;
+  height: 12px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
-  transform: rotate(-35deg);
+  background: rgba(255, 255, 255, 0.8);
+  transform: rotate(-32deg);
+  filter: blur(1px);
+}`,
+    js: `const ballContainer = document.getElementById('ballContainer');
+const ball = document.getElementById('ball');
+const shadow = document.getElementById('shadow');
+const shockwave = document.getElementById('shockwave');
+
+function triggerShockwave(intensity = 1) {
+  if (typeof gsap === 'undefined' || !shockwave) return;
+  gsap.fromTo(shockwave, 
+    { scale: 0.2, opacity: 0.9 * intensity },
+    { scale: 1.5 * intensity, opacity: 0, duration: 0.35, ease: "power2.out" }
+  );
 }
 
-@keyframes ballBounce {
-  0% { transform: translateY(0px) scale(1, 1); }
-  4% { transform: translateY(0px) scale(1.22, 0.78); }
-  8% { transform: translateY(-38px) scale(0.88, 1.15); }
-  20% { transform: translateY(-220px) scale(1, 1); }
-  35% { transform: translateY(0px) scale(1.28, 0.72); }
-  39% { transform: translateY(-25px) scale(0.92, 1.1); }
-  49% { transform: translateY(-110px) scale(1, 1); }
-  62% { transform: translateY(0px) scale(1.18, 0.84); }
-  75% { transform: translateY(-42px) scale(1, 1); }
-  82% { transform: translateY(0px) scale(1.09, 0.93); }
-  87% { transform: translateY(-8px) scale(0.99, 1.01); }
-  92%, 100% { transform: translateY(0px) scale(1, 1); }
-}
+if (typeof gsap !== 'undefined') {
+  const tl = gsap.timeline({ repeat: -1 });
 
-@keyframes shadowBounce {
-  0% { transform: scale(1); opacity: 0.7; }
-  4% { transform: scale(1.25); opacity: 0.9; }
-  20% { transform: scale(0.28); opacity: 0.15; }
-  35% { transform: scale(1.35); opacity: 0.95; }
-  49% { transform: scale(0.48); opacity: 0.28; }
-  62% { transform: scale(1.2); opacity: 0.88; }
-  75% { transform: scale(0.75); opacity: 0.45; }
-  82% { transform: scale(1.1); opacity: 0.8; }
-  92%, 100% { transform: scale(1); opacity: 0.75; }
+  // 1단계 도약 준비
+  tl.to(ball, { scaleX: 1.3, scaleY: 0.7, duration: 0.22, ease: "power1.in" }, 0)
+    .to(shadow, { scale: 1.25, opacity: 0.95, duration: 0.22 }, 0);
+
+  // 1회차 메가 도약 (-240px)
+  tl.to(ball, { scaleX: 0.8, scaleY: 1.25, duration: 0.18, ease: "power2.out" }, 0.22)
+    .to(ball, { scaleX: 1.0, scaleY: 1.0, duration: 0.65, ease: "sine.out" }, 0.40)
+    .to(ballContainer, { y: -240, duration: 0.85, ease: "power2.out" }, 0.22)
+    .to(shadow, { scale: 0.25, opacity: 0.18, duration: 0.85, ease: "power2.out" }, 0.22);
+
+  // 1회차 가속 낙하 및 착지
+  tl.to(ball, { scaleX: 0.85, scaleY: 1.18, duration: 0.4, ease: "power2.in" }, 1.25)
+    .to(ballContainer, { y: 0, duration: 0.75, ease: "power2.in" }, 1.07)
+    .to(shadow, { scale: 1.0, opacity: 0.9, duration: 0.75, ease: "power2.in" }, 1.07)
+    .add(() => triggerShockwave(1.0), 1.82)
+    .to(ball, { scaleX: 1.45, scaleY: 0.65, duration: 0.09, ease: "power2.out" }, 1.82)
+    .to(shadow, { scale: 1.4, opacity: 0.98, duration: 0.09 }, 1.82);
+
+  // 2회차 중간 도약 (-120px)
+  tl.to(ball, { scaleX: 0.86, scaleY: 1.16, duration: 0.15, ease: "power2.out" }, 1.91)
+    .to(ball, { scaleX: 1.0, scaleY: 1.0, duration: 0.5, ease: "sine.out" }, 2.06)
+    .to(ballContainer, { y: -120, duration: 0.65, ease: "power2.out" }, 1.91)
+    .to(shadow, { scale: 0.45, opacity: 0.35, duration: 0.65, ease: "power2.out" }, 1.91);
+
+  // 2회차 낙하 및 착지
+  tl.to(ball, { scaleX: 0.9, scaleY: 1.12, duration: 0.3, ease: "power2.in" }, 2.75)
+    .to(ballContainer, { y: 0, duration: 0.6, ease: "power2.in" }, 2.56)
+    .to(shadow, { scale: 1.0, opacity: 0.88, duration: 0.6, ease: "power2.in" }, 2.56)
+    .add(() => triggerShockwave(0.65), 3.16)
+    .to(ball, { scaleX: 1.28, scaleY: 0.78, duration: 0.08, ease: "power2.out" }, 3.16)
+    .to(shadow, { scale: 1.25, opacity: 0.95, duration: 0.08 }, 3.16);
+
+  // 3회차 작은 도약 (-50px)
+  tl.to(ball, { scaleX: 0.92, scaleY: 1.09, duration: 0.12, ease: "power2.out" }, 3.24)
+    .to(ball, { scaleX: 1.0, scaleY: 1.0, duration: 0.35, ease: "sine.out" }, 3.36)
+    .to(ballContainer, { y: -50, duration: 0.48, ease: "power2.out" }, 3.24)
+    .to(shadow, { scale: 0.72, opacity: 0.55, duration: 0.48, ease: "power2.out" }, 3.24);
+
+  // 3회차 착지 및 안정화
+  tl.to(ballContainer, { y: 0, duration: 0.42, ease: "power2.in" }, 3.72)
+    .to(shadow, { scale: 1.0, opacity: 0.85, duration: 0.42, ease: "power2.in" }, 3.72)
+    .add(() => triggerShockwave(0.35), 4.14)
+    .to(ball, { scaleX: 1.14, scaleY: 0.88, duration: 0.07, ease: "power2.out" }, 4.14);
+
+  // 미세 반동 후 5초 완성
+  tl.to(ballContainer, { y: -10, duration: 0.16, ease: "power1.out" }, 4.21)
+    .to(ballContainer, { y: 0, duration: 0.15, ease: "power1.in" }, 4.37)
+    .to(ball, { scaleX: 1.0, scaleY: 1.0, duration: 0.25, ease: "elastic.out(1, 0.5)" }, 4.52)
+    .to({}, { duration: 0.0 }, 5.0);
 }`,
   },
   {
@@ -441,6 +496,198 @@ export const MOTION_PRESETS: MotionItem[] = [
   0% { transform: rotate(0deg) scale(1); }
   50% { transform: rotate(180deg) scale(1.2); }
   100% { transform: rotate(360deg) scale(1); }
+}`,
+  },
+  {
+    id: 'svg-ink-bloom',
+    title: '🖋️ 수묵 먹물 번짐 (SVG 필터)',
+    category: '3d',
+    description: 'aimotion 기법: feTurbulence와 feDisplacementMap을 활용한 유기적 잉크 확산 효과',
+    tags: ['SVG Filter', 'Ink Bloom', 'aimotion-01'],
+    html: `<div class="ink-scene">
+  <svg class="ink-filters" width="0" height="0">
+    <filter id="inkDisplace">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="4" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="35" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+  
+  <div class="ink-wrapper">
+    <div class="ink-drop main-drop"></div>
+    <div class="ink-drop sub-drop-1"></div>
+    <div class="ink-drop sub-drop-2"></div>
+    <h3 class="ink-title">먹 한 방울</h3>
+  </div>
+</div>`,
+    css: `.ink-scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #f1ede4;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.ink-wrapper {
+  position: relative;
+  width: 240px;
+  height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: url(#inkDisplace);
+}
+
+.ink-drop {
+  position: absolute;
+  border-radius: 50%;
+  background: #1c1917;
+  opacity: 0.92;
+}
+
+.main-drop {
+  width: 80px;
+  height: 80px;
+  animation: inkSpread 5s cubic-bezier(0.1, 0.8, 0.2, 1) infinite;
+}
+
+.sub-drop-1 {
+  width: 45px;
+  height: 45px;
+  top: 40px;
+  left: 30px;
+  animation: inkSpread 5s cubic-bezier(0.1, 0.8, 0.2, 1) 0.3s infinite;
+}
+
+.sub-drop-2 {
+  width: 55px;
+  height: 55px;
+  bottom: 45px;
+  right: 35px;
+  animation: inkSpread 5s cubic-bezier(0.1, 0.8, 0.2, 1) 0.6s infinite;
+}
+
+.ink-title {
+  position: relative;
+  z-index: 10;
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: #fff;
+  filter: none;
+  animation: titleFade 5s ease infinite;
+}
+
+@keyframes inkSpread {
+  0% { transform: scale(0.1); opacity: 0; }
+  15% { transform: scale(1); opacity: 0.95; }
+  60% { transform: scale(2.2); opacity: 0.85; }
+  90% { transform: scale(2.6); opacity: 0; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+@keyframes titleFade {
+  0%, 15% { opacity: 0; transform: translateY(10px); }
+  30%, 75% { opacity: 1; transform: translateY(0); }
+  90%, 100% { opacity: 0; transform: translateY(-5px); }
+}`,
+  },
+  {
+    id: 'gooey-liquid',
+    title: '💧 끈적한 메타볼 유체 (Gooey)',
+    category: 'card',
+    description: 'aimotion 기법: SVG 매트릭스 필터를 활용하여 액체 방울이 서로 끌어당겨 융합되는 모션',
+    tags: ['SVG Gooey', 'Metaballs', 'aimotion-117'],
+    html: `<div class="gooey-scene">
+  <svg style="position: absolute; width: 0; height: 0;">
+    <defs>
+      <filter id="goo">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
+        <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 25 -9" result="goo" />
+        <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="gooey-container">
+    <div class="blob core-blob"></div>
+    <div class="blob orbit-blob b1"></div>
+    <div class="blob orbit-blob b2"></div>
+    <div class="blob orbit-blob b3"></div>
+  </div>
+</div>`,
+    css: `.gooey-scene {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  background: #090a0f;
+  border-radius: 16px;
+}
+
+.gooey-container {
+  position: relative;
+  width: 260px;
+  height: 260px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: url(#goo);
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #06b6d4, #3b82f6, #8b5cf6);
+}
+
+.core-blob {
+  width: 90px;
+  height: 90px;
+  animation: corePulse 3s ease-in-out infinite;
+}
+
+.orbit-blob {
+  width: 45px;
+  height: 45px;
+}
+
+.b1 {
+  animation: orbit1 4s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.b2 {
+  animation: orbit2 3.2s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.b3 {
+  animation: orbit3 4.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+@keyframes corePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+}
+
+@keyframes orbit1 {
+  0% { transform: translate(-75px, 0px) scale(0.9); }
+  50% { transform: translate(75px, 0px) scale(1.1); }
+  100% { transform: translate(-75px, 0px) scale(0.9); }
+}
+
+@keyframes orbit2 {
+  0% { transform: translate(0px, -70px) scale(1.1); }
+  50% { transform: translate(0px, 70px) scale(0.85); }
+  100% { transform: translate(0px, -70px) scale(1.1); }
+}
+
+@keyframes orbit3 {
+  0% { transform: translate(55px, 55px) scale(0.95); }
+  50% { transform: translate(-55px, -55px) scale(1.05); }
+  100% { transform: translate(55px, 55px) scale(0.95); }
 }`,
   },
 ]
