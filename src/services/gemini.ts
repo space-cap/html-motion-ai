@@ -80,3 +80,4 @@ export async function generateMotionWithGemini(
     throw new Error('AI 응답을 JSON 형식으로 해석하지 못했습니다. 다시 시도해 주세요.')
   }
 }
+
