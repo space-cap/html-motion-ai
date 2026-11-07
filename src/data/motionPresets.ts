@@ -2,6 +2,106 @@ import type { MotionItem } from '../types/motion'
 
 export const MOTION_PRESETS: MotionItem[] = [
   {
+    id: 'orange-bounce',
+    title: '🟠 주황색 공 3단 바운스 (5초)',
+    category: 'card',
+    description: '물리 탄성(Squash & Stretch)과 그림자가 연동된 5초 3회 바운스 모션',
+    tags: ['Physics', 'Squash & Stretch', '5s Animation', 'Ball'],
+    html: `<div class="stage">
+  <div class="floor"></div>
+  <div class="ball-shadow"></div>
+  <div class="ball-wrapper">
+    <div class="ball"></div>
+  </div>
+</div>`,
+    css: `.stage {
+  position: relative;
+  width: 360px;
+  height: 320px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 50px;
+}
+
+.floor {
+  position: absolute;
+  bottom: 50px;
+  width: 320px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f97316, transparent);
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.6);
+}
+
+.ball-shadow {
+  position: absolute;
+  bottom: 44px;
+  width: 80px;
+  height: 16px;
+  background: radial-gradient(ellipse, rgba(0, 0, 0, 0.85) 0%, rgba(249, 115, 22, 0.2) 50%, transparent 75%);
+  border-radius: 50%;
+  animation: shadowBounce 5s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+}
+
+.ball-wrapper {
+  position: absolute;
+  bottom: 50px;
+  animation: ballBounce 5s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+  transform-origin: center bottom;
+}
+
+.ball {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #ffedd5 0%, #fed7aa 15%, #fb923c 45%, #ea580c 75%, #9a3412 100%);
+  box-shadow: 
+    inset -6px -6px 14px rgba(124, 45, 18, 0.8),
+    inset 4px 4px 10px rgba(255, 255, 255, 0.7),
+    0 8px 24px rgba(234, 88, 12, 0.45);
+  position: relative;
+}
+
+.ball::before {
+  content: '';
+  position: absolute;
+  top: 9px;
+  left: 13px;
+  width: 18px;
+  height: 11px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  transform: rotate(-35deg);
+}
+
+@keyframes ballBounce {
+  0% { transform: translateY(0px) scale(1, 1); }
+  4% { transform: translateY(0px) scale(1.22, 0.78); }
+  8% { transform: translateY(-38px) scale(0.88, 1.15); }
+  20% { transform: translateY(-220px) scale(1, 1); }
+  35% { transform: translateY(0px) scale(1.28, 0.72); }
+  39% { transform: translateY(-25px) scale(0.92, 1.1); }
+  49% { transform: translateY(-110px) scale(1, 1); }
+  62% { transform: translateY(0px) scale(1.18, 0.84); }
+  75% { transform: translateY(-42px) scale(1, 1); }
+  82% { transform: translateY(0px) scale(1.09, 0.93); }
+  87% { transform: translateY(-8px) scale(0.99, 1.01); }
+  92%, 100% { transform: translateY(0px) scale(1, 1); }
+}
+
+@keyframes shadowBounce {
+  0% { transform: scale(1); opacity: 0.7; }
+  4% { transform: scale(1.25); opacity: 0.9; }
+  20% { transform: scale(0.28); opacity: 0.15; }
+  35% { transform: scale(1.35); opacity: 0.95; }
+  49% { transform: scale(0.48); opacity: 0.28; }
+  62% { transform: scale(1.2); opacity: 0.88; }
+  75% { transform: scale(0.75); opacity: 0.45; }
+  82% { transform: scale(1.1); opacity: 0.8; }
+  92%, 100% { transform: scale(1); opacity: 0.75; }
+}`,
+  },
+  {
     id: 'neon-glow-btn',
     title: '네온 사이버 글로우 버튼',
     category: 'button',
