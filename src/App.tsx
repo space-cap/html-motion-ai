@@ -10,17 +10,19 @@ import {
   Wand2,
   Sliders,
   Layers,
-  Flame,
   Zap,
   Waves,
   Box,
+  CircleDot,
+  ExternalLink,
 } from 'lucide-react'
+import SandboxPreview from './components/SandboxPreview'
 import './App.css'
 
 interface MotionPreset {
   id: string
   name: string
-  icon: typeof Flame
+  icon: typeof CircleDot
   description: string
   code: string
   component: (isPlaying: boolean, speed: number) => React.ReactNode
@@ -32,9 +34,121 @@ export default function App() {
   const [isPlaying, setIsPlaying] = useState(true)
   const [speed, setSpeed] = useState(1)
   const [copied, setCopied] = useState(false)
-  const [selectedPreset, setSelectedPreset] = useState<string>('neon-pulse')
+  const [selectedPreset, setSelectedPreset] = useState<string>('orange-bounce')
+
+  const orangeBounceHtml = `<div class="stage">
+  <div class="floor"></div>
+  <div class="ball-shadow"></div>
+  <div class="ball-wrapper">
+    <div class="ball"></div>
+  </div>
+</div>`
+
+  const orangeBounceCss = `.stage {
+  position: relative;
+  width: 360px;
+  height: 320px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 50px;
+}
+.floor {
+  position: absolute;
+  bottom: 50px;
+  width: 300px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #f97316, transparent);
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.5);
+}
+.ball-shadow {
+  position: absolute;
+  bottom: 44px;
+  width: 75px;
+  height: 14px;
+  background: radial-gradient(ellipse, rgba(0,0,0,0.8) 0%, rgba(249,115,22,0.2) 50%, transparent 75%);
+  border-radius: 50%;
+  animation: shadowBounce 5s cubic-bezier(0.25, 1, 0.5, 1) infinite;
+}
+.ball-wrapper {
+  position: absolute;
+  bottom: 50px;
+  animation: ballBounce 5s cubic-bezier(0.28, 0.84, 0.42, 1) infinite;
+  transform-origin: center bottom;
+}
+.ball {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%, #ffedd5 0%, #fb923c 45%, #ea580c 75%, #9a3412 100%);
+  box-shadow: inset -5px -5px 12px rgba(124, 45, 18, 0.8), inset 3px 3px 8px rgba(255,255,255,0.7), 0 8px 20px rgba(234, 88, 12, 0.4);
+  position: relative;
+}
+.ball::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  width: 16px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.7);
+  transform: rotate(-35deg);
+}
+@keyframes ballBounce {
+  0% { transform: translateY(0px) scale(1, 1); }
+  4% { transform: translateY(0px) scale(1.22, 0.78); }
+  8% { transform: translateY(-35px) scale(0.88, 1.15); }
+  20% { transform: translateY(-200px) scale(1, 1); }
+  35% { transform: translateY(0px) scale(1.28, 0.72); }
+  39% { transform: translateY(-25px) scale(0.92, 1.1); }
+  49% { transform: translateY(-105px) scale(1, 1); }
+  62% { transform: translateY(0px) scale(1.18, 0.84); }
+  75% { transform: translateY(-40px) scale(1, 1); }
+  82% { transform: translateY(0px) scale(1.09, 0.93); }
+  87% { transform: translateY(-8px) scale(0.99, 1.01); }
+  92%, 100% { transform: translateY(0px) scale(1, 1); }
+}
+@keyframes shadowBounce {
+  0% { transform: scale(1); opacity: 0.7; }
+  4% { transform: scale(1.25); opacity: 0.9; }
+  20% { transform: scale(0.28); opacity: 0.15; }
+  35% { transform: scale(1.35); opacity: 0.95; }
+  49% { transform: scale(0.48); opacity: 0.28; }
+  62% { transform: scale(1.2); opacity: 0.88; }
+  75% { transform: scale(0.75); opacity: 0.45; }
+  82% { transform: scale(1.1); opacity: 0.8; }
+  92%, 100% { transform: scale(1); opacity: 0.75; }
+}`
 
   const presets: MotionPreset[] = [
+    {
+      id: 'orange-bounce',
+      name: '🟠 주황색 공 3단 바운스 (5초)',
+      icon: CircleDot,
+      description: '물리 탄성(Squash & Stretch)과 그림자가 연동된 5초 3회 바운스 모션',
+      code: `<!-- 주황색 공 3단 바운스 모션 HTML & CSS -->\n<div class="stage">\n  <div class="floor"></div>\n  <div class="ball-shadow"></div>\n  <div class="ball-wrapper">\n    <div class="ball"></div>\n  </div>\n</div>\n\n<style>\n${orangeBounceCss}\n</style>`,
+      component: () => (
+        <div className="w-full flex flex-col items-center">
+          <SandboxPreview
+            html={orangeBounceHtml}
+            css={orangeBounceCss}
+            bgTheme="dark"
+          />
+          <div className="mt-3 flex items-center gap-3">
+            <a
+              href="/bouncing-ball.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-orange-400 hover:text-orange-300 flex items-center gap-1.5 underline underline-offset-4 transition"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              독립형 전체 화면(Full Screen) 페이지 열기
+            </a>
+          </div>
+        </div>
+      ),
+    },
     {
       id: 'neon-pulse',
       name: '네온 펄스 카드',
@@ -169,9 +283,12 @@ export default function App() {
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault()
     if (!prompt.trim()) return
-    // AI 생성 시뮬레이션: 프롬프트에 따라 프리셋 전환
-    const nextIdx = (presets.findIndex((p) => p.id === selectedPreset) + 1) % presets.length
-    setSelectedPreset(presets[nextIdx].id)
+    if (prompt.includes('공') || prompt.includes('바운스') || prompt.includes('주황')) {
+      setSelectedPreset('orange-bounce')
+    } else {
+      const nextIdx = (presets.findIndex((p) => p.id === selectedPreset) + 1) % presets.length
+      setSelectedPreset(presets[nextIdx].id)
+    }
   }
 
   return (
@@ -179,7 +296,7 @@ export default function App() {
       {/* Top Header */}
       <header className="border-b border-slate-800/80 bg-slate-950/60 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-50">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-fuchsia-500 flex items-center justify-center shadow-lg shadow-violet-500/30">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-orange-500 to-violet-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
             <Sparkles className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -193,6 +310,15 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-4">
+          <a
+            href="/bouncing-ball.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-xs font-semibold text-orange-300 bg-orange-950/40 hover:bg-orange-900/60 px-3 py-1.5 rounded-lg border border-orange-500/40 transition"
+          >
+            <span>🟠 주황색 공 모션 전체화면</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
           <a
             href="https://github.com/space-cap/html-motion-ai"
             target="_blank"
@@ -221,7 +347,7 @@ export default function App() {
               <textarea
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
-                placeholder="예: 클릭하면 튕기면서 빛나는 네온 카드 모션 만들어줘..."
+                placeholder="예: 주황색 공이 바닥에서 세 번 튀어 오르는 5초 모션..."
                 rows={3}
                 className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl p-3 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-violet-500 transition resize-none"
               />
@@ -367,7 +493,7 @@ export default function App() {
           </div>
 
           {/* Tab Body */}
-          <div className="flex-1 flex items-center justify-center p-8 min-h-[460px] relative">
+          <div className="flex-1 flex items-center justify-center p-6 min-h-[460px] relative">
             <AnimatePresence mode="wait">
               {activeTab === 'preview' ? (
                 <motion.div
@@ -388,7 +514,7 @@ export default function App() {
                   exit={{ opacity: 0 }}
                   className="w-full h-full"
                 >
-                  <pre className="w-full h-full p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 font-mono overflow-auto leading-relaxed select-all">
+                  <pre className="w-full h-full p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 font-mono overflow-auto leading-relaxed select-all max-h-[460px]">
                     {currentPreset.code}
                   </pre>
                 </motion.div>
@@ -398,8 +524,8 @@ export default function App() {
 
           {/* Canvas Footer */}
           <div className="px-5 py-3 border-t border-slate-800/80 bg-slate-950/40 flex items-center justify-between text-xs text-slate-500">
-            <span>렌더러: Framer Motion + Tailwind CSS</span>
-            <span>FPS: 60 | GPU 가속 활성화됨</span>
+            <span>렌더러: Pure HTML5 + CSS3 Keyframe Sandbox</span>
+            <span>재생 시간: 5.0s | 탄성 물리(Squash & Stretch) 적용</span>
           </div>
         </div>
       </main>
